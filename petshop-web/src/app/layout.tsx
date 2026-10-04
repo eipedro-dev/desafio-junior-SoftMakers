@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import { Ubuntu } from 'next/font/google';
+import { Ubuntu, Geist } from 'next/font/google';
 import './globals.css';
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const ubuntu = Ubuntu({
   subsets: ['latin'],
@@ -36,7 +39,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={ubuntu.variable}>
+    <html lang="pt-BR" className={cn(ubuntu.variable)}>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

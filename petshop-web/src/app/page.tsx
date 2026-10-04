@@ -1,51 +1,72 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { petsApi } from '@/lib/api';
 import Image from 'next/image';
+import { CirclePlus, Search } from 'lucide-react';
+import PetList from '@/components/PetList';
+import Pagination from '@/components/Pagination';
+import CreatePetButton from '@/components/CreatePetButton';
+import { petsApi } from '@/lib/api';
 
-export default async function HomePage() {
-  const pets = await petsApi.list();
+export const metadata: Metadata = {
+  title: 'Pets',
+  description: 'Lista de pets cadastrados na petshop.',
+};
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; q?: string }>;
+}) {
+  const { page, q = '' } = await searchParams;
+  const { data: pets, page: current, lastPage } = await petsApi.list({
+    page: Number(page) || 1,
+    search: q,
+  });
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <header className="mb-6 flex-col items-center justify-between">
-        <Image src="/img/logo.svg" alt="Logo da SoftPet" width={182} height={48} />
-        <div>
-          
-          <Link
-          href="/pets/new"
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-        >
-          Novo pet
+    <main className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 p-6">
+      <header className="flex items-center gap-2 text-2xl font-medium">
+        <Link href="/">
+          <Image src="/img/logo.svg" alt="Petshop" width={182} height={48} />
         </Link>
-        </div>
       </header>
 
+      <div className="flex items-center gap-4">
+        <form
+          action="/"
+          className="search-frame flex flex-1 items-center rounded-lg"
+        >
+          <span className="flex h-10 w-11 items-center justify-center rounded-l-[6px] bg-gray">
+            <Search className="size-4" />
+          </span>
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="Buscar por pet ou dono"
+            className="h-10 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-white/40"
+          />
+          <button
+            type="submit"
+            className="cursor-pointer bg-gray  mr-1 p-2 text-xs font-bold hover:bg-gray/80 rounded-sm"
+          >
+            Pesquisar
+          </button>
+        </form>
+
+        <CreatePetButton />
+      </div>
+
       {pets.length === 0 ? (
-        <p className="text-gray-500">Nenhum pet cadastrado ainda.</p>
+        <p className="py-16 text-center text-white/60">
+          {q ? `Nenhum resultado para "${q}".` : 'Nenhum pet cadastrado ainda.'}
+        </p>
       ) : (
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b">
-              <th className="p-2">Nome</th>
-              <th className="p-2">Tipo</th>
-              <th className="p-2">Raça</th>
-              <th className="p-2">Idade</th>
-              <th className="p-2">Dono</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pets.map((pet) => (
-              <tr key={pet.id} className="border-b">
-                <td className="p-2">{pet.name}</td>
-                <td className="p-2">{pet.type === 'dog' ? 'Cachorro' : 'Gato'}</td>
-                <td className="p-2">{pet.breed}</td>
-                <td className="p-2">{pet.age}</td>
-                <td className="p-2">{pet.owner.name}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <PetList pets={pets} />
       )}
+
+      <div className="mt-auto">
+        <Pagination page={current} lastPage={lastPage} search={q} />
+      </div>
     </main>
   );
 }
